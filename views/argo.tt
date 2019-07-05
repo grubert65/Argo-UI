@@ -1,0 +1,11 @@
+    <div id="jqxLayout">
+        <!--autoHideGroup-->
+        <div data-container="WorkflowListPanel">
+            <div id="treeGrid"></div>
+        </div>
+        <!--documentGroup-->
+        <div data-container="ParametersPanel"></div>
+        <div data-container="OutputPanel">
+          <textarea id="log"></textarea>
+        </div>
+    </div>
