@@ -8,4 +8,7 @@
         <div data-container="OutputPanel">
           <textarea id="log"></textarea>
         </div>
+        <div data-container="ParamsPanel">
+          <div id="paramsGrid"></div>
+        </div>
     </div>

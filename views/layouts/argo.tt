@@ -22,6 +22,11 @@
   <script type="text/javascript" src="/javascripts/jqwidgets/jqxdatatable.js"></script>
   <script type="text/javascript" src="/javascripts/jqwidgets/jqxtreegrid.js"></script>
 
+  <!-- jqxGrid -->
+  <script type="text/javascript" src="/javascripts/jqwidgets/jqxgrid.js"></script>
+  <script type="text/javascript" src="/javascripts/jqwidgets/jqxgrid.selection.js"></script>
+  <script type="text/javascript" src="/javascripts/jqwidgets/jqxdata.js"></script>
+
   <!-- TextArea -->
   <script type="text/javascript" src="/javascripts/jqwidgets/jqxtextarea.js"></script>
 
@@ -46,6 +51,7 @@
                 }]
               }, {
                 type: 'layoutGroup',
+                orientation: 'vertical',
                 width: 800,
                 height: 800,
                 items: [{
@@ -56,6 +62,10 @@
                         type: 'documentPanel',
                         title: 'Workflow output',
                         contentContainer: 'OutputPanel'
+                    },{
+                        type: 'documentPanel',
+                        title: 'Workflow params',
+                        contentContainer: 'ParamsPanel'
                     }]
                 }]
             }]
@@ -66,27 +76,33 @@
         var workflows = {
             datatype: "json",
             datafields: [
-                { name: 'finishedAt', type: 'date' },
-                { name: 'message', type: 'string' },
-                { name: 'status', type: 'string' },
-                { name: 'completed', type: 'bool' },
+                { name: 'id', type: 'string' },
+                { name: 'parent', type: 'string' },
                 { name: 'startedAt', type: 'date' },
-                { name: 'name', type: 'string' }
+                { name: 'phase', type: 'string' },
+                { name: 'finishedAt', type: 'date' },
+                { name: 'type', type: 'string' }
             ],
-            url: "http://localhost:5000/workflows"
+            hierarchy:
+            {
+                keyDataField: { name: 'id' },
+                parentDataField: { name: 'parent' }
+            },
+            id: 'id',
+            url: "http://localhost:5000/workflow_tree"
         };
 
-        var dataAdapter = new $.jqx.dataAdapter(workflows);
+        var workflowsDA = new $.jqx.dataAdapter(workflows);
 
         $("#treeGrid").jqxTreeGrid({
           height: 700,
-          source: dataAdapter,
+          source: workflowsDA,
           sortable: true,
           theme: 'energyblue',
           columns: [
-              { text: 'Name', dataField: 'name', width: 250 },
-              { text: 'Status', dataField: 'status', width: 80 },
-              { text: 'Completed', dataField: 'completed', width: 40 },
+              { text: 'Name', dataField: 'id', width: 250 },
+              { text: 'Type', dataField: 'type', width: 100 },
+              { text: 'Status', dataField: 'phase', width: 80 },
               { text: 'Start date', dataField: 'startedAt', width: 300 },
               { text: 'End date', dataField: 'finishedAt', width: 300 }
           ],
@@ -100,16 +116,35 @@
         $('#treeGrid').on('rowSelect', function (event) {
           var args = event.args;
           var row = args.row;
-          //alert("The row you selected is: " + row.name);
+          //alert("The row you selected is: " + row.id);
 
-          var url = "http://localhost:5000/log?name=" + row.name
+          var url = "http://localhost:5000/log?id=" + row.id
           //alert("The url is: " + url);
 
           $.get( url, function( data ) {
             //alert( "Load was performed:\n" + data);
-
             $('#log').jqxTextArea('val', data)
           });
+
+          var input_params = {
+              datatype: "json",
+              datafields: [
+                  { name: 'name', type: 'string' },
+                  { name: 'value', type: 'string' },
+              ],
+              url: "http://localhost:5000/params?name=" + row.id
+          };
+
+          var paramsDA = new $.jqx.dataAdapter(input_params);
+          $("#paramsGrid").jqxGrid(
+            {
+                width: 600,
+                source: paramsDA,
+                columns: [
+                  { text: 'Name', datafield: 'name', width: 270 },
+                  { text: 'Value', datafield: 'value', width: 330 }
+              ]
+            });
         });
     });
   </script>
