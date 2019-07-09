@@ -1,14 +1,16 @@
     <div id="jqxLayout">
-        <!--autoHideGroup-->
         <div data-container="WorkflowListPanel">
             <div id="treeGrid"></div>
         </div>
-        <!--documentGroup-->
-        <div data-container="ParametersPanel"></div>
         <div data-container="OutputPanel">
-          <textarea id="log"></textarea>
+          <textarea id="log" style="width:100%"></textarea>
+          OK
         </div>
         <div data-container="ParamsPanel">
           <div id="paramsGrid"></div>
         </div>
+        <div data-container="performanceGraph">
+          <div id="performanceGraph" style="width:600px; height: 400px"></div>
+        </div>
+
     </div>

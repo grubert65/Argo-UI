@@ -4,13 +4,13 @@
   <meta charset="<% settings.charset %>">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
   <title><% title %></title>
-  <link rel="stylesheet" href="<% request.uri_base %>/css/style.css">
   <link rel="stylesheet" href="/javascripts/jqwidgets/styles/jqx.base.css" type="text/css" />
+  <link rel="stylesheet" href="/javascripts/jqwidgets/styles/jqx.energyblue.css" type="text/css" />
 
-  <!--<script type="text/javascript" src="/javascripts/jquery.js"></script> -->
+  <!-- <script type="text/javascript" src="/javascripts/jquery.js"></script> -->
   <script type="text/javascript" src="/javascripts/scripts/jquery-1.11.1.min.js"></script>
   <script type="text/javascript" src="/javascripts/jqwidgets/jqxcore.js"></script>
-  <script type="text/javascript" src="/javascripts/jqwidgets/jqxribbon.js"></script>
+  <script type="text/javascript" src="/javascripts/jqwidgets/jqxribbon.js"></script> 
   <script type="text/javascript" src="/javascripts/jqwidgets/jqxlayout.js"></script>
   
   <!-- jqxTreeGrid resources -->
@@ -30,34 +30,49 @@
   <!-- TextArea -->
   <script type="text/javascript" src="/javascripts/jqwidgets/jqxtextarea.js"></script>
 
+  <!-- chart -->
+  <script type="text/javascript" src="/javascripts/jqwidgets/jqxchart.core.js"></script>
+  <script type="text/javascript" src="/javascripts/jqwidgets/jqxdraw.js"></script>
+
+  <style>
+        html, body{width: 100%; height: 100%; overflow: hidden;}
+  </style>
+  <style type="text/css">
+        .jqx-layout-group-auto-hide-content-vertical
+        {
+            width: 200px;
+        }
+  </style>
   <script type="text/javascript">
     $(document).ready(function () {
 
-        // the 'layout' JSON array defines the internal structure of the layout
         var layout = [{
             type: 'layoutGroup',
-            orientation: 'horizontal',
+            orientation: 'vertical',
             items: [{
                 type: 'tabbedGroup',
                 allowClose: false,
                 allowPin: false,
-                width: 1000,
+                width: '100%',
+                height: '50%',
+                minHeight: 400,
                 items: [{
                     type: 'layoutPanel',
-                    width: 1000,
-                    height: 800,
+                    width: '100%',
+                    height: 400,
+                    minHeight: 400,
                     title: 'Workflows',
                     contentContainer: 'WorkflowListPanel'
                 }]
-              }, {
+              },{
                 type: 'layoutGroup',
-                orientation: 'vertical',
-                width: 800,
-                height: 800,
+                orientation: 'horizontal',
+                height: '50%',
+                minHeight: 200,
                 items: [{
                     type: 'documentGroup',
-                    height: 800,
-                    minHeight: 200,
+                    width: '60%',
+                    height: 400,
                     items: [{
                         type: 'documentPanel',
                         title: 'Workflow output',
@@ -67,16 +82,26 @@
                         title: 'Workflow params',
                         contentContainer: 'ParamsPanel'
                     }]
+                },{
+                    type: 'documentGroup',
+                    width: '40%',
+                    height: 400,
+                    items: [{
+                        type: 'documentPanel',
+                        title: 'Performance Graph',
+                        contentContainer: 'performanceGraph'
+                    }]
                 }]
             }]
         }];
 
-        $('#jqxLayout').jqxLayout({ width: 1800, height: 800, layout: layout });
+        $('#jqxLayout').jqxLayout({ theme: 'energyblue', width: '100%', height: '100%', layout: layout });
 
         var workflows = {
             datatype: "json",
             datafields: [
                 { name: 'id', type: 'string' },
+                { name: 'name', type: 'string' },
                 { name: 'parent', type: 'string' },
                 { name: 'startedAt', type: 'date' },
                 { name: 'phase', type: 'string' },
@@ -95,23 +120,76 @@
         var workflowsDA = new $.jqx.dataAdapter(workflows);
 
         $("#treeGrid").jqxTreeGrid({
-          height: 700,
           source: workflowsDA,
           sortable: true,
           theme: 'energyblue',
+          height: 400,
           columns: [
-              { text: 'Name', dataField: 'id', width: 250 },
+              { text: 'Name', dataField: 'name', width: 700 },
               { text: 'Type', dataField: 'type', width: 100 },
               { text: 'Status', dataField: 'phase', width: 80 },
               { text: 'Start date', dataField: 'startedAt', width: 300 },
               { text: 'End date', dataField: 'finishedAt', width: 300 }
           ],
           ready: function () {
-              $("#treeGrid").jqxTreeGrid('expandRow', '2');
+              $("#treeGrid").jqxTreeGrid('expandRow', '3');
           }
         });
 
-        $('#log').jqxTextArea({ width: 800, height: 800 });
+        $('#log').jqxTextArea({ width: '100%', height: 800 });
+
+
+
+        // fake code for graph...
+        // prepare chart data
+            var  sampleData = [
+                    { Day:'Monday', Keith:30, Erica:15, George: 25},
+                    { Day:'Tuesday', Keith:25, Erica:25, George: 30},
+                    { Day:'Wednesday', Keith:30, Erica:20, George: 25},
+                    { Day:'Thursday', Keith:35, Erica:25, George: 45},
+                    { Day:'Friday', Keith:20, Erica:20, George: 25},
+                    { Day:'Saturday', Keith:30, Erica:20, George: 30},
+                    { Day:'Sunday', Keith:60, Erica:45, George: 90}
+                ];
+				
+            // prepare jqxChart settings
+            var settings = {
+                title: "Fitness & exercise weekly scorecard",
+                description: "Time spent in vigorous exercise",
+                padding: { left: 5, top: 5, right: 5, bottom: 5 },
+                titlePadding: { left: 90, top: 0, right: 0, bottom: 10 },
+                source: sampleData,
+                xAxis:
+                {
+                    dataField: 'Day',
+                    gridLines: {visible: false},
+                    tickMarks: {visible: true}
+                },
+                valueAxis:
+                {
+                    minValue: 0,
+                    maxValue: 100,
+                    unitInterval: 10,
+                    title: {text: 'Time in minutes'}
+                },
+                colorScheme: 'scheme01',
+                seriesGroups:
+                    [
+                        {
+                            type: 'column',
+                            columnsGapPercent: 30,
+                            seriesGapPercent: 10,
+                            series: [
+                                    { dataField: 'Keith', displayText: 'Keith'},
+                                    { dataField: 'Erica', displayText: 'Erica'},
+                                    { dataField: 'George', displayText: 'George'}
+                                ]
+                        }
+                    ]
+            };
+            
+            // select the chartContainer DIV element and render the chart.
+            $('#performanceGraph').jqxChart(settings);
 
         $('#treeGrid').on('rowSelect', function (event) {
           var args = event.args;
@@ -138,11 +216,11 @@
           var paramsDA = new $.jqx.dataAdapter(input_params);
           $("#paramsGrid").jqxGrid(
             {
-                width: 600,
+                width: '100%',
                 source: paramsDA,
                 columns: [
                   { text: 'Name', datafield: 'name', width: 270 },
-                  { text: 'Value', datafield: 'value', width: 330 }
+                  { text: 'Value', datafield: 'value', width: '100%' }
               ]
             });
         });
