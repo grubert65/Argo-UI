@@ -71,7 +71,7 @@
                 minHeight: 200,
                 items: [{
                     type: 'documentGroup',
-                    width: '60%',
+                    width: '20%',
                     height: 400,
                     items: [{
                         type: 'documentPanel',
@@ -84,7 +84,7 @@
                     }]
                 },{
                     type: 'documentGroup',
-                    width: '40%',
+                    width: '80%',
                     height: 400,
                     items: [{
                         type: 'documentPanel',
@@ -140,61 +140,13 @@
 
 
 
-        // fake code for graph...
-        // prepare chart data
-            var  sampleData = [
-                    { Day:'Monday', Keith:30, Erica:15, George: 25},
-                    { Day:'Tuesday', Keith:25, Erica:25, George: 30},
-                    { Day:'Wednesday', Keith:30, Erica:20, George: 25},
-                    { Day:'Thursday', Keith:35, Erica:25, George: 45},
-                    { Day:'Friday', Keith:20, Erica:20, George: 25},
-                    { Day:'Saturday', Keith:30, Erica:20, George: 30},
-                    { Day:'Sunday', Keith:60, Erica:45, George: 90}
-                ];
-				
-            // prepare jqxChart settings
-            var settings = {
-                title: "Fitness & exercise weekly scorecard",
-                description: "Time spent in vigorous exercise",
-                padding: { left: 5, top: 5, right: 5, bottom: 5 },
-                titlePadding: { left: 90, top: 0, right: 0, bottom: 10 },
-                source: sampleData,
-                xAxis:
-                {
-                    dataField: 'Day',
-                    gridLines: {visible: false},
-                    tickMarks: {visible: true}
-                },
-                valueAxis:
-                {
-                    minValue: 0,
-                    maxValue: 100,
-                    unitInterval: 10,
-                    title: {text: 'Time in minutes'}
-                },
-                colorScheme: 'scheme01',
-                seriesGroups:
-                    [
-                        {
-                            type: 'column',
-                            columnsGapPercent: 30,
-                            seriesGapPercent: 10,
-                            series: [
-                                    { dataField: 'Keith', displayText: 'Keith'},
-                                    { dataField: 'Erica', displayText: 'Erica'},
-                                    { dataField: 'George', displayText: 'George'}
-                                ]
-                        }
-                    ]
-            };
-            
-            // select the chartContainer DIV element and render the chart.
-            $('#performanceGraph').jqxChart(settings);
 
         $('#treeGrid').on('rowSelect', function (event) {
           var args = event.args;
           var row = args.row;
           //alert("The row you selected is: " + row.id);
+
+          draw_ycsb_benchmark_chart( row.id );
 
           var url = "http://localhost:5000/log?id=" + row.id
           //alert("The url is: " + url);
@@ -225,6 +177,62 @@
             });
         });
     });
+
+    function draw_ycsb_benchmark_chart( id ) {
+        // fake code for graph...
+        // prepare chart data
+        //var  ycsbData = [
+                //{ Day:'Monday', Keith:30, Erica:15, George: 25},
+                //{ Day:'Tuesday', Keith:25, Erica:25, George: 30},
+                //{ Day:'Wednesday', Keith:30, Erica:20, George: 25},
+                //{ Day:'Thursday', Keith:35, Erica:25, George: 45},
+                //{ Day:'Friday', Keith:20, Erica:20, George: 25},
+                //{ Day:'Saturday', Keith:30, Erica:20, George: 30},
+                //{ Day:'Sunday', Keith:60, Erica:45, George: 90}
+            //];
+
+        var ycsb_chart_url = "http://localhost:5000/ycsb_chart_data?id=" + id;
+        $.getJSON( ycsb_chart_url, function( data ) {
+            console.log(data['metrics']);
+            console.log(data['series']);
+
+            // prepare jqxChart settings
+            var settings = {
+                title: "YCSB Benchmark",
+                description: "YCSB Benchmark",
+                padding: { left: 5, top: 5, right: 5, bottom: 5 },
+                titlePadding: { left: 90, top: 0, right: 0, bottom: 10 },
+                source: data['metrics'],
+                xAxis:
+                {
+                    dataField: 'metric',
+                    gridLines: {visible: false},
+                    tickMarks: {visible: true}
+                },
+                valueAxis:
+                {
+                    minValue: 0,
+                    maxValue: 100,
+                    unitInterval: 10,
+                    title: {text: 'YCSB Benchmark'}
+                },
+                colorScheme: 'scheme01',
+                seriesGroups:
+                    [
+                        {
+                            type: 'column',
+                            columnsGapPercent: 20,
+                            seriesGapPercent: 2,
+                            series: data['series']
+                        }
+                    ]
+            };
+            
+            // select the chartContainer DIV element and render the chart.
+            $('#performanceGraph').jqxChart(settings);
+        });
+    }
+
   </script>
 </head>
 <body>
