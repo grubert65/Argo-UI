@@ -41,42 +41,160 @@ get '/params' => sub {
     return encode_json( $argo_client->workflow_params( $name ) );
 };
 
-get '/ycsb_chart_data' => sub {
+get '/overall_runtime_chart_data' => sub {
     my $id = query_parameters->get('id');
     debug "Workflow ID: $id";
 
     content_type 'application/json';
     return encode_json({
             metrics => [
-                { metric => 'Rt(ms)', 3075499422 => 30, 3075499423 => 15, 3075499424 =>  25},
-                { metric => 'Thr(op/s)', 3075499422 => 25, 3075499423 => 25, 3075499424 =>  30},
-                { metric => '[R] Avg Lat(us)', 3075499422 => 30, 3075499423 => 20, 3075499424 =>  25},
-                { metric => '[R] Min Lat(us)', 3075499422 => 35, 3075499423 => 25, 3075499424 =>  45},
-                { metric => '[R] Max Lat(us)', 3075499422 => 35, 3075499423 => 25, 3075499424 =>  45},
-                { metric => '[R] 95th Lat(us),', 3075499422 => 20, 3075499423 => 20, 3075499424 =>  25},
-                { metric => '[R] 99th Lat(us)', 3075499422 => 30, 3075499423 => 20, 3075499424 =>  30},
-                { metric => '[R] RetOK', 3075499422 => 60, 3075499423 => 45, 3075499424 =>  90},
-                { metric => '[R] Op', 3075499422 => 60, 3075499423 => 45, 3075499424 =>  90},
-                { metric => '[I] Op', 3075499422 => 60, 3075499423 => 45, 3075499424 =>  90},
-                { metric => '[I] Avg Lat(us)', 3075499422 => 60, 3075499423 => 45, 3075499424 =>  90},
-                { metric => '[I] Min Lat(us)', 3075499422 => 60, 3075499423 => 45, 3075499424 =>  90},
-                { metric => '[I] Max Lat(us)', 3075499422 => 60, 3075499423 => 45, 3075499424 =>  90},
-                { metric => '[I] 95th Lat(us)', 3075499422 => 60, 3075499423 => 45, 3075499424 =>  90},
-                { metric => '[I] 99th Lat(us)', 3075499422 => 60, 3075499423 => 45, 3075499424 =>  90},
-                { metric => '[I] RetOK', 3075499422 => 60, 3075499423 => 45, 3075499424 =>  90},
-                { metric => '[U] Op', 3075499422 => 60, 3075499423 => 45, 3075499424 =>  90},
-                { metric => '[U] Avg Lat(us)', 3075499422 => 60, 3075499423 => 45, 3075499424 =>  90},
-                { metric => '[U] Min Lat(us)', 3075499422 => 60, 3075499423 => 45, 3075499424 =>  90},
-                { metric => '[U] Max Lat(us)', 3075499422 => 60, 3075499423 => 45, 3075499424 =>  90},
-                { metric => '[U] 95th Lat(us)', 3075499422 => 60, 3075499423 => 45, 3075499424 =>  90},
-                { metric => '[U] 99th Lat(us)', 3075499422 => 60, 3075499423 => 45, 3075499424 =>  90},
-                { metric => '[U] RetOK', 3075499422 => 60, 3075499423 => 45, 3075499424 =>  90}
+                { metric => 'Runtime (ms)', 3075499422 => 323557, 3075499423 => 244845, 3075499424 =>  288709},
             ],
             series => [
                 { dataField =>  '3075499422', displayText =>  '3075499422 (Load)'},
                 { dataField =>  '3075499423', displayText =>  '3075499423 (run)'},
                 { dataField =>  '3075499424', displayText =>  '3075499424 (run)'}
-            ]
+            ],
+            valueAxis => {
+                minValue    =>  0,
+                maxValue    => 350000,
+                unitInterval=> 50000,
+                title       => {text => 'Overall Runtime'}
+            }
+    });
+};
+
+get '/overall_throughput_chart_data' => sub {
+    my $id = query_parameters->get('id');
+    debug "Workflow ID: $id";
+
+    content_type 'application/json';
+    return encode_json({
+            metrics => [
+                { 
+                    metric => 'Throughput (ops/sec)', 
+                    3075499422 => 309, 
+                    3075499423 => 408, 
+                    3075499424 => 346
+                }
+            ],
+            series => [
+                { dataField =>  '3075499422', displayText =>  '3075499422 (Load)'},
+                { dataField =>  '3075499423', displayText =>  '3075499423 (run)'},
+                { dataField =>  '3075499424', displayText =>  '3075499424 (run)'}
+            ],
+            valueAxis => {
+                minValue    =>  0,
+                maxValue    => 450,
+                unitInterval=> 50,
+                title       => {text => 'Overall Throughput'}
+            }
+    });
+};
+
+get '/operations_chart_data' => sub {
+    my $id = query_parameters->get('id');
+    debug "Workflow ID: $id";
+
+    content_type 'application/json';
+    return encode_json({
+            metrics => [
+                { metric => 'Insert', 3075499422 => 0, 3075499423 => 0, 3075499424 =>  0},
+                { metric => 'Read', 3075499422 => 0, 3075499423 => 0, 3075499424 =>  0},
+                { metric => 'Update', 3075499422 => 0, 3075499423 => 0, 3075499424 =>  0},
+            ],
+            series => [
+                { dataField =>  '3075499422', displayText =>  '3075499422 (Load)'},
+                { dataField =>  '3075499423', displayText =>  '3075499423 (run)'},
+                { dataField =>  '3075499424', displayText =>  '3075499424 (run)'}
+            ],
+            valueAxis => {
+                minValue    =>  0,
+                maxValue    => 1000,
+                unitInterval=> 50,
+                title       => {text => 'NOT OK Operations'}
+            }
+    });
+};
+
+get '/read_latencies_chart_data' => sub {
+    my $id = query_parameters->get('id');
+    debug "Workflow ID: $id";
+
+    content_type 'application/json';
+    return encode_json({
+            metrics => [
+                { metric => 'Average', 3075499422 => 30, 3075499423 => 20, 3075499424 =>  25},
+                { metric => 'Min', 3075499422 => 35, 3075499423 => 25, 3075499424 =>  45},
+                { metric => 'Max', 3075499422 => 35, 3075499423 => 25, 3075499424 =>  45},
+                { metric => '95th percentile', 3075499422 => 20, 3075499423 => 20, 3075499424 =>  25},
+                { metric => '99th percentile', 3075499422 => 30, 3075499423 => 20, 3075499424 =>  30},
+            ],
+            series => [
+                { dataField =>  '3075499422', displayText =>  '3075499422 (Load)'},
+                { dataField =>  '3075499423', displayText =>  '3075499423 (run)'},
+                { dataField =>  '3075499424', displayText =>  '3075499424 (run)'}
+            ],
+            valueAxis => {
+                minValue    =>  0,
+                maxValue    => 1000,
+                unitInterval=> 50,
+                title       => {text => 'Read Latencies (us)'}
+            }
+    });
+};
+
+get '/insert_latencies_chart_data' => sub {
+    my $id = query_parameters->get('id');
+    debug "Workflow ID: $id";
+
+    content_type 'application/json';
+    return encode_json({
+            metrics => [
+                { metric => 'Average', 3075499422 => 30, 3075499423 => 20, 3075499424 =>  25},
+                { metric => 'Min', 3075499422 => 35, 3075499423 => 25, 3075499424 =>  45},
+                { metric => 'Max', 3075499422 => 35, 3075499423 => 25, 3075499424 =>  45},
+                { metric => '95th percentile', 3075499422 => 20, 3075499423 => 20, 3075499424 =>  25},
+                { metric => '99th percentile', 3075499422 => 30, 3075499423 => 20, 3075499424 =>  30},
+            ],
+            series => [
+                { dataField =>  '3075499422', displayText =>  '3075499422 (Load)'},
+                { dataField =>  '3075499423', displayText =>  '3075499423 (run)'},
+                { dataField =>  '3075499424', displayText =>  '3075499424 (run)'}
+            ],
+            valueAxis => {
+                minValue    =>  0,
+                maxValue    => 1000,
+                unitInterval=> 50,
+                title       => {text => 'Insert Latencies (us)'}
+            }
+    });
+};
+
+get '/update_latencies_chart_data' => sub {
+    my $id = query_parameters->get('id');
+    debug "Workflow ID: $id";
+
+    content_type 'application/json';
+    return encode_json({
+            metrics => [
+                { metric => 'Average', 3075499422 => 30, 3075499423 => 20, 3075499424 =>  25},
+                { metric => 'Min', 3075499422 => 35, 3075499423 => 25, 3075499424 =>  45},
+                { metric => 'Max', 3075499422 => 35, 3075499423 => 25, 3075499424 =>  45},
+                { metric => '95th percentile', 3075499422 => 20, 3075499423 => 20, 3075499424 =>  25},
+                { metric => '99th percentile', 3075499422 => 30, 3075499423 => 20, 3075499424 =>  30},
+            ],
+            series => [
+                { dataField =>  '3075499422', displayText =>  '3075499422 (Load)'},
+                { dataField =>  '3075499423', displayText =>  '3075499423 (run)'},
+                { dataField =>  '3075499424', displayText =>  '3075499424 (run)'}
+            ],
+            valueAxis => {
+                minValue    =>  0,
+                maxValue    => 1000,
+                unitInterval=> 50,
+                title       => {text => 'Update Latencies (us)'}
+            }
     });
 };
 

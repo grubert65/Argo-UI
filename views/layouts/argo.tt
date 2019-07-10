@@ -50,19 +50,35 @@
             type: 'layoutGroup',
             orientation: 'vertical',
             items: [{
-                type: 'tabbedGroup',
-                allowClose: false,
-                allowPin: false,
-                width: '100%',
+                type: 'layoutGroup',
+                orientation: 'horizontal',
                 height: '50%',
                 minHeight: 400,
                 items: [{
-                    type: 'layoutPanel',
-                    width: '100%',
+                    type: 'documentGroup',
+                    width: '60%',
                     height: 400,
-                    minHeight: 400,
-                    title: 'Workflows',
-                    contentContainer: 'WorkflowListPanel'
+                    items: [{
+                        type: 'documentPanel',
+                        width: '100%',
+                        height: 400,
+                        minHeight: 400,
+                        title: 'Workflows',
+                        contentContainer: 'WorkflowListPanel'
+                    }]
+                },{
+                    type: 'documentGroup',
+                    width: '40%',
+                    height: 400,
+                    items: [{
+                        type: 'documentPanel',
+                        title: 'Pod output',
+                        contentContainer: 'OutputPanel'
+                    },{
+                        type: 'documentPanel',
+                        title: 'Workflow params',
+                        contentContainer: 'ParamsPanel'
+                    }]
                 }]
               },{
                 type: 'layoutGroup',
@@ -70,26 +86,48 @@
                 height: '50%',
                 minHeight: 200,
                 items: [{
-                    type: 'documentGroup',
-                    width: '20%',
+                    type: 'layoutGroup',
+                    width: '15%',
                     height: 400,
                     items: [{
-                        type: 'documentPanel',
-                        title: 'Workflow output',
-                        contentContainer: 'OutputPanel'
-                    },{
-                        type: 'documentPanel',
-                        title: 'Workflow params',
-                        contentContainer: 'ParamsPanel'
+                        type: 'documentGroup',
+                        width: '100%',
+                        items: [{
+                            type: 'documentPanel',
+                            title: 'Runtime',
+                            contentContainer: 'runtimeGraph'
+                        },{
+                            type: 'documentPanel',
+                            title: 'Throughput',
+                            contentContainer: 'throughputGraph'
+                        }]
                     }]
                 },{
                     type: 'documentGroup',
-                    width: '80%',
+                    width: '15%',
                     height: 400,
                     items: [{
                         type: 'documentPanel',
-                        title: 'Performance Graph',
-                        contentContainer: 'performanceGraph'
+                        title: 'Operations',
+                        contentContainer: 'operationsGraph'
+                    }]
+                },{
+                    type: 'documentGroup',
+                    width: '35%',
+                    height: 400,
+                    items: [{
+                        type: 'documentPanel',
+                        title: 'Read Latencies',
+                        contentContainer: 'readLatenciesGraph'
+                    }]
+                },{
+                    type: 'documentGroup',
+                    width: '35%',
+                    height: 400,
+                    items: [{
+                        type: 'documentPanel',
+                        title: 'Update Latencies',
+                        contentContainer: 'updateLatenciesGraph'
                     }]
                 }]
             }]
@@ -125,8 +163,8 @@
           theme: 'energyblue',
           height: 400,
           columns: [
-              { text: 'Name', dataField: 'name', width: 700 },
-              { text: 'Type', dataField: 'type', width: 100 },
+              { text: 'Name', dataField: 'name', width: 380 },
+              { text: 'Type', dataField: 'type', width: 85 },
               { text: 'Status', dataField: 'phase', width: 80 },
               { text: 'Start date', dataField: 'startedAt', width: 300 },
               { text: 'End date', dataField: 'finishedAt', width: 300 }
@@ -139,14 +177,16 @@
         $('#log').jqxTextArea({ width: '100%', height: 800 });
 
 
-
-
         $('#treeGrid').on('rowSelect', function (event) {
           var args = event.args;
           var row = args.row;
           //alert("The row you selected is: " + row.id);
 
-          draw_ycsb_benchmark_chart( row.id );
+          draw_runtime_graph( row.id );
+          draw_throughput_graph( row.id );
+          draw_operations_graph( row.id );
+          draw_read_latencies_graph( row.id );
+          draw_update_latencies_graph( row.id );
 
           var url = "http://localhost:5000/log?id=" + row.id
           //alert("The url is: " + url);
@@ -178,30 +218,19 @@
         });
     });
 
-    function draw_ycsb_benchmark_chart( id ) {
-        // fake code for graph...
-        // prepare chart data
-        //var  ycsbData = [
-                //{ Day:'Monday', Keith:30, Erica:15, George: 25},
-                //{ Day:'Tuesday', Keith:25, Erica:25, George: 30},
-                //{ Day:'Wednesday', Keith:30, Erica:20, George: 25},
-                //{ Day:'Thursday', Keith:35, Erica:25, George: 45},
-                //{ Day:'Friday', Keith:20, Erica:20, George: 25},
-                //{ Day:'Saturday', Keith:30, Erica:20, George: 30},
-                //{ Day:'Sunday', Keith:60, Erica:45, George: 90}
-            //];
-
-        var ycsb_chart_url = "http://localhost:5000/ycsb_chart_data?id=" + id;
-        $.getJSON( ycsb_chart_url, function( data ) {
+    function draw_runtime_graph( id ) {
+        var chart_url = "http://localhost:5000/overall_runtime_chart_data?id=" + id;
+        $.getJSON( chart_url, function( data ) {
             console.log(data['metrics']);
             console.log(data['series']);
+            console.log(data['valueAxis']);
 
             // prepare jqxChart settings
             var settings = {
-                title: "YCSB Benchmark",
-                description: "YCSB Benchmark",
+                title: "Runtime (ms)",
+                description: "",
                 padding: { left: 5, top: 5, right: 5, bottom: 5 },
-                titlePadding: { left: 90, top: 0, right: 0, bottom: 10 },
+                titlePadding: { left: 20, top: 0, right: 0, bottom: 10 },
                 source: data['metrics'],
                 xAxis:
                 {
@@ -209,13 +238,7 @@
                     gridLines: {visible: false},
                     tickMarks: {visible: true}
                 },
-                valueAxis:
-                {
-                    minValue: 0,
-                    maxValue: 100,
-                    unitInterval: 10,
-                    title: {text: 'YCSB Benchmark'}
-                },
+                valueAxis: data['valueAxis'],
                 colorScheme: 'scheme01',
                 seriesGroups:
                     [
@@ -228,8 +251,152 @@
                     ]
             };
             
-            // select the chartContainer DIV element and render the chart.
-            $('#performanceGraph').jqxChart(settings);
+            $('#runtimeGraphID').jqxChart(settings);
+        });
+    }
+
+    function draw_throughput_graph( id ) {
+        var chart_url = "http://localhost:5000/overall_throughput_chart_data?id=" + id;
+        $.getJSON( chart_url, function( data ) {
+            console.log(data['metrics']);
+            console.log(data['series']);
+            console.log(data['valueAxis']);
+
+            var settings = {
+                title: "Throughput (ops/sec)",
+                description: "",
+                padding: { left: 5, top: 5, right: 5, bottom: 5 },
+                titlePadding: { left: 20, top: 0, right: 0, bottom: 10 },
+                source: data['metrics'],
+                xAxis:
+                {
+                    dataField: 'metric',
+                    gridLines: {visible: false},
+                    tickMarks: {visible: true}
+                },
+                valueAxis: data['valueAxis'],
+                colorScheme: 'scheme01',
+                seriesGroups:
+                    [
+                        {
+                            type: 'column',
+                            columnsGapPercent: 20,
+                            seriesGapPercent: 2,
+                            series: data['series']
+                        }
+                    ]
+            };
+            
+            $('#throughputGraphID').jqxChart(settings);
+        });
+    }
+
+    function draw_operations_graph( id ) {
+        var chart_url = "http://localhost:5000/operations_chart_data?id=" + id;
+        $.getJSON( chart_url, function( data ) {
+            console.log(data['metrics']);
+            console.log(data['series']);
+            console.log(data['valueAxis']);
+
+            // prepare jqxChart settings
+            var settings = {
+                title: "Operations NOT OK",
+                description: "",
+                padding: { left: 5, top: 5, right: 5, bottom: 5 },
+                titlePadding: { left: 30, top: 0, right: 0, bottom: 10 },
+                source: data['metrics'],
+                xAxis:
+                {
+                    dataField: 'metric',
+                    gridLines: {visible: false},
+                    tickMarks: {visible: true}
+                },
+                valueAxis: data['valueAxis'],
+                colorScheme: 'scheme01',
+                seriesGroups:
+                    [
+                        {
+                            type: 'column',
+                            columnsGapPercent: 20,
+                            seriesGapPercent: 2,
+                            series: data['series']
+                        }
+                    ]
+            };
+            
+            $('#operationsGraph').jqxChart(settings);
+        });
+    }
+
+    function draw_read_latencies_graph( id ) {
+        var chart_url = "http://localhost:5000/read_latencies_chart_data?id=" + id;
+        $.getJSON( chart_url, function( data ) {
+            console.log(data['metrics']);
+            console.log(data['series']);
+            console.log(data['valueAxis']);
+
+            var settings = {
+                title: "Read Latencies (us)",
+                description: "",
+                padding: { left: 5, top: 5, right: 5, bottom: 5 },
+                titlePadding: { left: 90, top: 0, right: 0, bottom: 10 },
+                source: data['metrics'],
+                xAxis:
+                {
+                    dataField: 'metric',
+                    gridLines: {visible: false},
+                    tickMarks: {visible: true}
+                },
+                valueAxis: data['valueAxis'],
+                colorScheme: 'scheme01',
+                seriesGroups:
+                    [
+                        {
+                            type: 'column',
+                            columnsGapPercent: 20,
+                            seriesGapPercent: 2,
+                            series: data['series']
+                        }
+                    ]
+            };
+            
+            $('#readLatenciesGraph').jqxChart(settings);
+        });
+    }
+
+    function draw_update_latencies_graph( id ) {
+        var chart_url = "http://localhost:5000/update_latencies_chart_data?id=" + id;
+        $.getJSON( chart_url, function( data ) {
+            console.log(data['metrics']);
+            console.log(data['series']);
+            console.log(data['valueAxis']);
+
+            var settings = {
+                title: "Update Latencies (us)",
+                description: "",
+                padding: { left: 5, top: 5, right: 5, bottom: 5 },
+                titlePadding: { left: 90, top: 0, right: 0, bottom: 10 },
+                source: data['metrics'],
+                xAxis:
+                {
+                    dataField: 'metric',
+                    gridLines: {visible: false},
+                    tickMarks: {visible: true}
+                },
+                valueAxis: data['valueAxis'],
+                colorScheme: 'scheme01',
+                seriesGroups:
+                    [
+                        {
+                            type: 'column',
+                            columnsGapPercent: 20,
+                            seriesGapPercent: 2,
+                            series: data['series']
+                        }
+                    ]
+            };
+            
+            $('#updateLatenciesGraph').jqxChart(settings);
         });
     }
 
