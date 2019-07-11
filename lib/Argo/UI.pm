@@ -5,6 +5,7 @@ use YCSB::Metrics;
 use Data::Printer;
 use Argo::Utils qw(
     runtime_chart_data
+    throughput_chart_data
     get_log
 );
 
@@ -80,31 +81,36 @@ get '/overall_runtime_chart_data' => sub {
 
     my $id = query_parameters->get('id');
     debug "Workflow ID: $id";
-    
-    my $steps = session('workflows_steps');
 
-    my $metrics = session('metrics');
-    my $data = runtime_chart_data( $metrics, $id ); 
-    session 'metrics' => $data->{metrics};
+    content_type 'application/json';
+
+    my $charts_data = session('charts_data');
+    if ( exists $charts_data->{$id} ) {
+        return encode_json( $charts_data->{$id} );
+    }
+
+    my $steps = session('workflows_steps');
+    my $data = runtime_chart_data( $id ); 
 
     my $chart_data = {
         metrics => [{
             metric => 'Runtime (ms)',
-            %{$data->{runtime_metrics}},
+            %{$data->{metrics}},
         }],
         series  => $data->{series},
         valueAxis => {
-            minValue    =>  0,
+            minValue    => $data->{min},
             maxValue    => $data->{max},
-            unitInterval=> $data->{min},
+            unitInterval=> $data->{unit_interval},
             title       => {text => 'Overall Runtime'}
         }
     };
 
     debug "Graph DATA:";
     debug np($chart_data);
+    $charts_data->{$id} = $chart_data;
+    session 'charts_data' => $charts_data;
 
-    content_type 'application/json';
     return encode_json( $chart_data );
 };
 
@@ -113,27 +119,57 @@ get '/overall_throughput_chart_data' => sub {
     debug "Workflow ID: $id";
 
     content_type 'application/json';
-    return encode_json({
-            metrics => [
-                { 
-                    metric => 'Throughput (ops/sec)', 
-                    3075499422 => 309, 
-                    3075499423 => 408, 
-                    3075499424 => 346
-                }
-            ],
-            series => [
-                { dataField =>  '3075499422', displayText =>  '3075499422 (Load)'},
-                { dataField =>  '3075499423', displayText =>  '3075499423 (run)'},
-                { dataField =>  '3075499424', displayText =>  '3075499424 (run)'}
-            ],
-            valueAxis => {
-                minValue    =>  0,
-                maxValue    => 450,
-                unitInterval=> 50,
-                title       => {text => 'Overall Throughput'}
-            }
-    });
+
+    my $charts_data = session('charts_data');
+    if ( exists $charts_data->{$id} ) {
+        return encode_json( $charts_data->{$id} );
+    }
+
+    my $steps = session('workflows_steps');
+    my $data = throughput_chart_data( $id ); 
+
+    my $chart_data = {
+        metrics => [{
+            metric => 'Throughput (ops/sec)', 
+            %{$data->{metrics}},
+        }],
+        series  => $data->{series},
+        valueAxis => {
+            minValue    => $data->{min},
+            maxValue    => $data->{max},
+            unitInterval=> $data->{unit_interval},
+            title       => {text => 'Overall Throughput'}
+        }
+    };
+
+    debug "Graph DATA:";
+    debug np($chart_data);
+    $charts_data->{$id} = $chart_data;
+    session 'charts_data' => $charts_data;
+
+    return encode_json( $chart_data );
+
+#     return encode_json({
+#             metrics => [
+#                 { 
+#                     metric => 'Throughput (ops/sec)', 
+#                     3075499422 => 309, 
+#                     3075499423 => 408, 
+#                     3075499424 => 346
+#                 }
+#             ],
+#             series => [
+#                 { dataField =>  '3075499422', displayText =>  '3075499422 (Load)'},
+#                 { dataField =>  '3075499423', displayText =>  '3075499423 (run)'},
+#                 { dataField =>  '3075499424', displayText =>  '3075499424 (run)'}
+#             ],
+#             valueAxis => {
+#                 minValue    =>  0,
+#                 maxValue    => 450,
+#                 unitInterval=> 50,
+#                 title       => {text => 'Overall Throughput'}
+#             }
+#     });
 };
 
 get '/operations_chart_data' => sub {
