@@ -2,6 +2,11 @@ package Argo::UI;
 use Dancer2;
 use Argo;
 use YCSB::Metrics;
+use Data::Printer;
+use Argo::Utils qw(
+    runtime_chart_data
+    get_log
+);
 
 our $VERSION = '0.1';
 our $argo_client = Argo->new(port => 8080);
@@ -19,49 +24,89 @@ get '/workflows' => sub {
 };
 
 get '/workflow_tree' => sub {
-    return encode_json( $argo_client->workflows_as_tree() );
+    my $workflows = $argo_client->workflows_as_tree();
+    session 'workflows_steps' => $workflows;
+    debug "STEPS: -------------\n".np($workflows);
+    return encode_json( $workflows );
 };
 
 get '/log' => sub {
     my $id = query_parameters->get('id');
-    my $log = $argo_client->workflow_log( $id );
-    my @log = split(/\n/, $log);
-    shift @log;
-    my $trimmed = join("\n", @log);
+    my $log = get_log( $id );
 
     if ( $id =~ /^ycsb/ ) {
         my $y = YCSB::Metrics->new();
-        $y->load_metrics( $trimmed );
+        $y->load_metrics( $log );
+        debug "--------- $id Metrics: ------------------";
+        debug np( $y->{metrics} );
+
+        my $metrics = session('metrics');
+        $metrics->{$id} = $y;
+        session 'metrics' => $metrics;
     }
-    return $trimmed;
+    return $log;
 };
+
 
 get '/params' => sub {
     my $name = query_parameters->get('name');
     return encode_json( $argo_client->workflow_params( $name ) );
 };
 
+#=============================================================
+
+=head2 overall_runtime_chart_data
+
+=head3 INPUT
+
+=head3 OUTPUT
+
+=head3 DESCRIPTION
+
+Retrieves the overall runtime metrics for all the ycsb pods in 
+the current workflow.
+
+Workflow:
+- get ids of all pods steps of selected workflow id 
+- get metrics from session
+- for each pod id:
+-- if pod metrics not in session => get pod metrics, update session
+-- build graph data
+
+=cut
+
+#=============================================================
 get '/overall_runtime_chart_data' => sub {
+
     my $id = query_parameters->get('id');
     debug "Workflow ID: $id";
+    
+    my $steps = session('workflows_steps');
+    return ( encode_json( {} ) ) unless ($steps->{$id}->{type} eq 'workflow');
+
+    my $metrics = session('metrics');
+    my $data = runtime_chart_data( $metrics, $id ); 
+    session 'metrics' => $data->{metrics};
+
+    my $chart_data = {
+        metrics => [{
+            metric => 'Runtime (ms)',
+            %{$data->{runtime_metrics}},
+        }],
+        series  => $data->{series},
+        valueAxis => {
+            minValue    =>  0,
+            maxValue    => $data->{max},
+            unitInterval=> $data->{min},
+            title       => {text => 'Overall Runtime'}
+        }
+    };
+
+    debug "Graph DATA:";
+    debug np($chart_data);
 
     content_type 'application/json';
-    return encode_json({
-            metrics => [
-                { metric => 'Runtime (ms)', 3075499422 => 323557, 3075499423 => 244845, 3075499424 =>  288709},
-            ],
-            series => [
-                { dataField =>  '3075499422', displayText =>  '3075499422 (Load)'},
-                { dataField =>  '3075499423', displayText =>  '3075499423 (run)'},
-                { dataField =>  '3075499424', displayText =>  '3075499424 (run)'}
-            ],
-            valueAxis => {
-                minValue    =>  0,
-                maxValue    => 350000,
-                unitInterval=> 50000,
-                title       => {text => 'Overall Runtime'}
-            }
-    });
+    return encode_json( $chart_data );
 };
 
 get '/overall_throughput_chart_data' => sub {
