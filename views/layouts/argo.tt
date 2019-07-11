@@ -180,13 +180,14 @@
         $('#treeGrid').on('rowSelect', function (event) {
           var args = event.args;
           var row = args.row;
-          //alert("The row you selected is: " + row.id);
 
-          draw_runtime_graph( row.id );
-          draw_throughput_graph( row.id );
-          draw_operations_graph( row.id );
-          draw_read_latencies_graph( row.id );
-          draw_update_latencies_graph( row.id );
+          if ( row.type == "workflow" ) {
+            draw_runtime_graph( row.id );
+            draw_throughput_graph( row.id );
+            draw_operations_graph( row.id );
+            draw_read_latencies_graph( row.id );
+            draw_update_latencies_graph( row.id );
+          }
 
           var url = "http://localhost:5000/log?id=" + row.id
           //alert("The url is: " + url);

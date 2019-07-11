@@ -82,7 +82,6 @@ get '/overall_runtime_chart_data' => sub {
     debug "Workflow ID: $id";
     
     my $steps = session('workflows_steps');
-    return ( encode_json( {} ) ) unless ($steps->{$id}->{type} eq 'workflow');
 
     my $metrics = session('metrics');
     my $data = runtime_chart_data( $metrics, $id ); 
