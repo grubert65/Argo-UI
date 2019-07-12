@@ -182,18 +182,18 @@
           var row = args.row;
 
           if ( row.type == "workflow" ) {
-            draw_runtime_graph( row.id );
             draw_throughput_graph( row.id );
+
+            draw_runtime_graph( row.id );
+
             draw_operations_graph( row.id );
-            draw_read_latencies_graph( row.id );
-            draw_update_latencies_graph( row.id );
+            //draw_read_latencies_graph( row.id );
+            //draw_update_latencies_graph( row.id );
           }
 
           var url = "http://localhost:5000/log?id=" + row.id
-          //alert("The url is: " + url);
 
           $.get( url, function( data ) {
-            //alert( "Load was performed:\n" + data);
             $('#log').jqxTextArea('val', data)
           });
 
@@ -220,14 +220,13 @@
     });
 
     function draw_runtime_graph( id ) {
-        var chart_url = "http://localhost:5000/overall_runtime_chart_data?id=" + id;
-        $.getJSON( chart_url, function( data ) {
+        var runtime_chart_url = "http://localhost:5000/overall_runtime_chart_data?id=" + id;
+        $.getJSON( runtime_chart_url).then( function( data ) {
             console.log(data['metrics']);
             console.log(data['series']);
             console.log(data['valueAxis']);
 
-            // prepare jqxChart settings
-            var settings = {
+            var runtime_data = {
                 title: "Runtime (ms)",
                 description: "",
                 padding: { left: 5, top: 5, right: 5, bottom: 5 },
@@ -251,19 +250,21 @@
                         }
                     ]
             };
-            
-            $('#runtimeGraphID').jqxChart(settings);
+            $('#runtimeGraphID').jqxChart(runtime_data);
+        })
+        .fail( function() {
+            alert("Something went wrong here...");
         });
     }
 
     function draw_throughput_graph( id ) {
-        var chart_url = "http://localhost:5000/overall_throughput_chart_data?id=" + id;
-        $.getJSON( chart_url, function( data ) {
+        var throughput_chart_url = "http://localhost:5000/overall_throughput_chart_data?id=" + id;
+        $.getJSON( throughput_chart_url ).then( function( data ) {
             console.log(data['metrics']);
             console.log(data['series']);
             console.log(data['valueAxis']);
 
-            var settings = {
+            var throughput_data = {
                 title: "Throughput (ops/sec)",
                 description: "",
                 padding: { left: 5, top: 5, right: 5, bottom: 5 },
@@ -288,7 +289,10 @@
                     ]
             };
             
-            $('#throughputGraphID').jqxChart(settings);
+            $('#throughputGraphID').jqxChart(throughput_data);
+        })
+        .fail(function() {
+            alert("something went wrong here...");
         });
     }
 

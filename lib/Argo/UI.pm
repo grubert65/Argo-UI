@@ -6,8 +6,12 @@ use Data::Printer;
 use Argo::Utils qw(
     runtime_chart_data
     throughput_chart_data
+    operations_chart_data
     get_log
 );
+
+use Log::Log4perl qw(:easy);
+Log::Log4perl->easy_init($DEBUG);
 
 our $VERSION = '0.1';
 our $argo_client = Argo->new(port => 8080);
@@ -38,6 +42,8 @@ get '/log' => sub {
     if ( $id =~ /^ycsb/ ) {
         my $y = YCSB::Metrics->new();
         $y->load_metrics( $log );
+        debug "--------- $id Log: ------------------";
+        debug $log;
         debug "--------- $id Metrics: ------------------";
         debug np( $y->{metrics} );
 
@@ -85,8 +91,8 @@ get '/overall_runtime_chart_data' => sub {
     content_type 'application/json';
 
     my $charts_data = session('charts_data');
-    if ( exists $charts_data->{$id} ) {
-        return encode_json( $charts_data->{$id} );
+    if ( exists $charts_data->{$id}->{runtime} ) {
+        return encode_json( $charts_data->{$id}->{runtime} );
     }
 
     my $steps = session('workflows_steps');
@@ -108,7 +114,7 @@ get '/overall_runtime_chart_data' => sub {
 
     debug "Graph DATA:";
     debug np($chart_data);
-    $charts_data->{$id} = $chart_data;
+    $charts_data->{$id}->{runtime} = $chart_data;
     session 'charts_data' => $charts_data;
 
     return encode_json( $chart_data );
@@ -121,8 +127,8 @@ get '/overall_throughput_chart_data' => sub {
     content_type 'application/json';
 
     my $charts_data = session('charts_data');
-    if ( exists $charts_data->{$id} ) {
-        return encode_json( $charts_data->{$id} );
+    if ( exists $charts_data->{$id}->{throughput} ) {
+        return encode_json( $charts_data->{$id}->{throughput} );
     }
 
     my $steps = session('workflows_steps');
@@ -144,32 +150,10 @@ get '/overall_throughput_chart_data' => sub {
 
     debug "Graph DATA:";
     debug np($chart_data);
-    $charts_data->{$id} = $chart_data;
+    $charts_data->{$id}->{throughput} = $chart_data;
     session 'charts_data' => $charts_data;
 
     return encode_json( $chart_data );
-
-#     return encode_json({
-#             metrics => [
-#                 { 
-#                     metric => 'Throughput (ops/sec)', 
-#                     3075499422 => 309, 
-#                     3075499423 => 408, 
-#                     3075499424 => 346
-#                 }
-#             ],
-#             series => [
-#                 { dataField =>  '3075499422', displayText =>  '3075499422 (Load)'},
-#                 { dataField =>  '3075499423', displayText =>  '3075499423 (run)'},
-#                 { dataField =>  '3075499424', displayText =>  '3075499424 (run)'}
-#             ],
-#             valueAxis => {
-#                 minValue    =>  0,
-#                 maxValue    => 450,
-#                 unitInterval=> 50,
-#                 title       => {text => 'Overall Throughput'}
-#             }
-#     });
 };
 
 get '/operations_chart_data' => sub {
@@ -177,6 +161,15 @@ get '/operations_chart_data' => sub {
     debug "Workflow ID: $id";
 
     content_type 'application/json';
+
+    my $charts_data = session('charts_data');
+    if ( exists $charts_data->{$id}->{operations} ) {
+        return encode_json( $charts_data->{$id}->{operations} );
+    }
+
+    my $steps = session('workflows_steps');
+    my $data = operations_chart_data( $id ); 
+
     return encode_json({
             metrics => [
                 { metric => 'Insert', 3075499422 => 0, 3075499423 => 0, 3075499424 =>  0},
