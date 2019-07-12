@@ -7,6 +7,9 @@ use Argo::Utils qw(
     runtime_chart_data
     throughput_chart_data
     operations_chart_data
+    read_latencies_chart_data
+    insert_latencies_chart_data
+    update_latencies_chart_data
     get_log
 );
 
@@ -170,24 +173,26 @@ get '/operations_chart_data' => sub {
     my $steps = session('workflows_steps');
     my $data = operations_chart_data( $id ); 
 
-    return encode_json({
-            metrics => [
-                { metric => 'Insert', 3075499422 => 0, 3075499423 => 0, 3075499424 =>  0},
-                { metric => 'Read', 3075499422 => 0, 3075499423 => 0, 3075499424 =>  0},
-                { metric => 'Update', 3075499422 => 0, 3075499423 => 0, 3075499424 =>  0},
-            ],
-            series => [
-                { dataField =>  '3075499422', displayText =>  '3075499422 (Load)'},
-                { dataField =>  '3075499423', displayText =>  '3075499423 (run)'},
-                { dataField =>  '3075499424', displayText =>  '3075499424 (run)'}
-            ],
-            valueAxis => {
-                minValue    =>  0,
-                maxValue    => 1000,
-                unitInterval=> 50,
-                title       => {text => 'NOT OK Operations'}
-            }
-    });
+    my $chart_data = {
+        metrics => [{
+            metric => 'Operations NOT OK',
+            %{$data->{metrics}},
+        }],
+        series => $data->{series},
+        valueAxis => {
+            minValue    => $data->{min},
+            maxValue    => $data->{max},
+            unitInterval=> $data->{unit_interval},
+            title       => {text => 'NOT OK Operations'}
+        }
+    };
+
+    debug "Graph DATA:";
+    debug np($chart_data);
+    $charts_data->{$id}->{operations} = $chart_data;
+    session 'charts_data' => $charts_data;
+
+    return encode_json( $chart_data );
 };
 
 get '/read_latencies_chart_data' => sub {
@@ -195,26 +200,32 @@ get '/read_latencies_chart_data' => sub {
     debug "Workflow ID: $id";
 
     content_type 'application/json';
-    return encode_json({
-            metrics => [
-                { metric => 'Average', 3075499422 => 30, 3075499423 => 20, 3075499424 =>  25},
-                { metric => 'Min', 3075499422 => 35, 3075499423 => 25, 3075499424 =>  45},
-                { metric => 'Max', 3075499422 => 35, 3075499423 => 25, 3075499424 =>  45},
-                { metric => '95th percentile', 3075499422 => 20, 3075499423 => 20, 3075499424 =>  25},
-                { metric => '99th percentile', 3075499422 => 30, 3075499423 => 20, 3075499424 =>  30},
-            ],
-            series => [
-                { dataField =>  '3075499422', displayText =>  '3075499422 (Load)'},
-                { dataField =>  '3075499423', displayText =>  '3075499423 (run)'},
-                { dataField =>  '3075499424', displayText =>  '3075499424 (run)'}
-            ],
-            valueAxis => {
-                minValue    =>  0,
-                maxValue    => 1000,
-                unitInterval=> 50,
-                title       => {text => 'Read Latencies (us)'}
-            }
-    });
+
+    my $charts_data = session('charts_data');
+    if ( exists $charts_data->{$id}->{read_latencies} ) {
+        return encode_json( $charts_data->{$id}->{read_latencies} );
+    }
+
+    my $steps = session('workflows_steps');
+    my $data = read_latencies_chart_data( $id ); 
+
+    my $chart_data = {
+        metrics => $data->{metrics},
+        series => $data->{series},
+        valueAxis => {
+            minValue    => $data->{min},
+            maxValue    => $data->{max},
+            unitInterval=> $data->{unit_interval},
+            title       => {text => 'Read Latencies (us)'}
+        }
+    };
+
+    debug "Graph DATA:";
+    debug np($chart_data);
+    $charts_data->{$id}->{read_latencies} = $chart_data;
+    session 'charts_data' => $charts_data;
+
+    return encode_json( $chart_data );
 };
 
 get '/insert_latencies_chart_data' => sub {
@@ -222,26 +233,31 @@ get '/insert_latencies_chart_data' => sub {
     debug "Workflow ID: $id";
 
     content_type 'application/json';
-    return encode_json({
-            metrics => [
-                { metric => 'Average', 3075499422 => 30, 3075499423 => 20, 3075499424 =>  25},
-                { metric => 'Min', 3075499422 => 35, 3075499423 => 25, 3075499424 =>  45},
-                { metric => 'Max', 3075499422 => 35, 3075499423 => 25, 3075499424 =>  45},
-                { metric => '95th percentile', 3075499422 => 20, 3075499423 => 20, 3075499424 =>  25},
-                { metric => '99th percentile', 3075499422 => 30, 3075499423 => 20, 3075499424 =>  30},
-            ],
-            series => [
-                { dataField =>  '3075499422', displayText =>  '3075499422 (Load)'},
-                { dataField =>  '3075499423', displayText =>  '3075499423 (run)'},
-                { dataField =>  '3075499424', displayText =>  '3075499424 (run)'}
-            ],
-            valueAxis => {
-                minValue    =>  0,
-                maxValue    => 1000,
-                unitInterval=> 50,
-                title       => {text => 'Insert Latencies (us)'}
-            }
-    });
+    my $charts_data = session('charts_data');
+    if ( exists $charts_data->{$id}->{insert_latencies} ) {
+        return encode_json( $charts_data->{$id}->{insert_latencies} );
+    }
+
+    my $steps = session('workflows_steps');
+    my $data = insert_latencies_chart_data( $id ); 
+
+    my $chart_data = {
+        metrics => $data->{metrics},
+        series => $data->{series},
+        valueAxis => {
+            minValue    => $data->{min},
+            maxValue    => $data->{max},
+            unitInterval=> $data->{unit_interval},
+            title       => {text => 'Insert Latencies (us)'}
+        }
+    };
+
+    debug "Graph DATA:";
+    debug np($chart_data);
+    $charts_data->{$id}->{insert_latencies} = $chart_data;
+    session 'charts_data' => $charts_data;
+
+    return encode_json( $chart_data );
 };
 
 get '/update_latencies_chart_data' => sub {
@@ -249,26 +265,31 @@ get '/update_latencies_chart_data' => sub {
     debug "Workflow ID: $id";
 
     content_type 'application/json';
-    return encode_json({
-            metrics => [
-                { metric => 'Average', 3075499422 => 30, 3075499423 => 20, 3075499424 =>  25},
-                { metric => 'Min', 3075499422 => 35, 3075499423 => 25, 3075499424 =>  45},
-                { metric => 'Max', 3075499422 => 35, 3075499423 => 25, 3075499424 =>  45},
-                { metric => '95th percentile', 3075499422 => 20, 3075499423 => 20, 3075499424 =>  25},
-                { metric => '99th percentile', 3075499422 => 30, 3075499423 => 20, 3075499424 =>  30},
-            ],
-            series => [
-                { dataField =>  '3075499422', displayText =>  '3075499422 (Load)'},
-                { dataField =>  '3075499423', displayText =>  '3075499423 (run)'},
-                { dataField =>  '3075499424', displayText =>  '3075499424 (run)'}
-            ],
-            valueAxis => {
-                minValue    =>  0,
-                maxValue    => 1000,
-                unitInterval=> 50,
-                title       => {text => 'Update Latencies (us)'}
-            }
-    });
+    my $charts_data = session('charts_data');
+    if ( exists $charts_data->{$id}->{update_latencies} ) {
+        return encode_json( $charts_data->{$id}->{update_latencies} );
+    }
+
+    my $steps = session('workflows_steps');
+    my $data = update_latencies_chart_data( $id ); 
+
+    my $chart_data = {
+        metrics => $data->{metrics},
+        series => $data->{series},
+        valueAxis => {
+            minValue    => $data->{min},
+            maxValue    => $data->{max},
+            unitInterval=> $data->{unit_interval},
+            title       => {text => 'Update Latencies (us)'}
+        }
+    };
+
+    debug "Graph DATA:";
+    debug np($chart_data);
+    $charts_data->{$id}->{update_latencies} = $chart_data;
+    session 'charts_data' => $charts_data;
+
+    return encode_json( $chart_data );
 };
 
 true;

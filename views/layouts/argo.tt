@@ -87,7 +87,7 @@
                 minHeight: 200,
                 items: [{
                     type: 'layoutGroup',
-                    width: '15%',
+                    width: '20%',
                     height: 400,
                     items: [{
                         type: 'documentGroup',
@@ -104,7 +104,7 @@
                     }]
                 },{
                     type: 'documentGroup',
-                    width: '15%',
+                    width: '20%',
                     height: 400,
                     items: [{
                         type: 'documentPanel',
@@ -113,7 +113,7 @@
                     }]
                 },{
                     type: 'documentGroup',
-                    width: '35%',
+                    width: '20%',
                     height: 400,
                     items: [{
                         type: 'documentPanel',
@@ -122,7 +122,16 @@
                     }]
                 },{
                     type: 'documentGroup',
-                    width: '35%',
+                    width: '20%',
+                    height: 400,
+                    items: [{
+                        type: 'documentPanel',
+                        title: 'Insert Latencies',
+                        contentContainer: 'insertLatenciesGraph'
+                    }]
+                },{
+                    type: 'documentGroup',
+                    width: '20%',
                     height: 400,
                     items: [{
                         type: 'documentPanel',
@@ -183,12 +192,11 @@
 
           if ( row.type == "workflow" ) {
             draw_throughput_graph( row.id );
-
             draw_runtime_graph( row.id );
-
             draw_operations_graph( row.id );
-            //draw_read_latencies_graph( row.id );
-            //draw_update_latencies_graph( row.id );
+            draw_read_latencies_graph( row.id );
+            draw_insert_latencies_graph( row.id );
+            draw_update_latencies_graph( row.id );
           }
 
           var url = "http://localhost:5000/log?id=" + row.id
@@ -344,7 +352,7 @@
                 title: "Read Latencies (us)",
                 description: "",
                 padding: { left: 5, top: 5, right: 5, bottom: 5 },
-                titlePadding: { left: 90, top: 0, right: 0, bottom: 10 },
+                titlePadding: { left: 50, top: 0, right: 0, bottom: 10 },
                 source: data['metrics'],
                 xAxis:
                 {
@@ -358,7 +366,7 @@
                     [
                         {
                             type: 'column',
-                            columnsGapPercent: 20,
+                            columnsGapPercent: 10,
                             seriesGapPercent: 2,
                             series: data['series']
                         }
@@ -366,6 +374,42 @@
             };
             
             $('#readLatenciesGraph').jqxChart(settings);
+        });
+    }
+
+    function draw_insert_latencies_graph( id ) {
+        var chart_url = "http://localhost:5000/insert_latencies_chart_data?id=" + id;
+        $.getJSON( chart_url, function( data ) {
+            console.log(data['metrics']);
+            console.log(data['series']);
+            console.log(data['valueAxis']);
+
+            var settings = {
+                title: "Insert Latencies (us)",
+                description: "",
+                padding: { left: 5, top: 5, right: 5, bottom: 5 },
+                titlePadding: { left: 50, top: 0, right: 0, bottom: 10 },
+                source: data['metrics'],
+                xAxis:
+                {
+                    dataField: 'metric',
+                    gridLines: {visible: false},
+                    tickMarks: {visible: true}
+                },
+                valueAxis: data['valueAxis'],
+                colorScheme: 'scheme01',
+                seriesGroups:
+                    [
+                        {
+                            type: 'column',
+                            columnsGapPercent: 10,
+                            seriesGapPercent: 2,
+                            series: data['series']
+                        }
+                    ]
+            };
+            
+            $('#insertLatenciesGraphID').jqxChart(settings);
         });
     }
 

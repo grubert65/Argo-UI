@@ -21,6 +21,9 @@
         <div data-container="readLatenciesGraph">
           <div id="readLatenciesGraph" style="width:'100%'; height: 400px"></div>
         </div>
+        <div data-container="insertLatenciesGraph">
+          <div id="insertLatenciesGraphID" style="width:'100%'; height: 400px"></div>
+        </div>
         <div data-container="updateLatenciesGraph">
           <div id="updateLatenciesGraph" style="width:'100%'; height: 400px"></div>
         </div>

@@ -11,6 +11,9 @@ our @EXPORT_OK = qw(
     runtime_chart_data
     throughput_chart_data
     operations_chart_data
+    read_latencies_chart_data
+    insert_latencies_chart_data
+    update_latencies_chart_data
     get_log
 );
 
@@ -96,6 +99,51 @@ sub operations_chart_data {
     };
 }
 
+sub read_latencies_chart_data {
+    my $id = shift;
+
+    $log->debug("read_latencies_chart_data");
+    my ($metrics, @pod_array) = _metrics( $id );
+    my ($graph_metrics, $min, $max) = read_latencies_metrics( $metrics ); 
+    return { 
+        metrics         => $graph_metrics, 
+        min             => $min, 
+        max             => $max,
+        unit_interval   => int(($max - $min)/10),
+        series          => get_series( @pod_array )
+    };
+}
+
+sub insert_latencies_chart_data {
+    my $id = shift;
+
+    $log->debug("read_latencies_chart_data");
+    my ($metrics, @pod_array) = _metrics( $id );
+    my ($graph_metrics, $min, $max) = insert_latencies_metrics( $metrics ); 
+    return { 
+        metrics         => $graph_metrics, 
+        min             => $min, 
+        max             => $max,
+        unit_interval   => int(($max - $min)/10),
+        series          => get_series( @pod_array )
+    };
+}
+
+sub update_latencies_chart_data {
+    my $id = shift;
+
+    $log->debug("update_latencies_chart_data");
+    my ($metrics, @pod_array) = _metrics( $id );
+    my ($graph_metrics, $min, $max) = update_latencies_metrics( $metrics ); 
+    return { 
+        metrics         => $graph_metrics, 
+        min             => $min, 
+        max             => $max,
+        unit_interval   => int(($max - $min)/10),
+        series          => get_series( @pod_array )
+    };
+}
+
 sub runtime_metrics {
     my $metrics = shift;
 
@@ -145,6 +193,102 @@ sub operations_metrics {
         push @$series, { dataField => $metric, displayText => $metric };
     }
     return ($graph_metrics, $min, $max, $series);
+}
+
+sub read_latencies_metrics {
+    my $metrics = shift;
+
+    my ($graph_metrics, $min, $max) = ([], 0, 0);
+
+    my $metric_lookup = {
+        READ_AverageLatency_us          => 'Average',
+        READ_MaxLatency_us              => 'Max',
+        READ_MinLatency_us              => 'Min',
+        READ_95thPercentileLatency_us   => '95th perc.',
+        READ_99thPercentileLatency_us   => '99th perc.'
+    };
+
+    foreach my $metric ( qw(
+        READ_AverageLatency_us
+        READ_MinLatency_us
+        READ_95thPercentileLatency_us
+        READ_99thPercentileLatency_us
+    )) {
+        my $metric_item = { metric => $metric_lookup->{$metric} };
+        foreach my $id ( keys %$metrics ) {
+            my $label = _get_label( $id );
+            my $value = int($metrics->{$id}->{$metric}) || 0;
+            $metric_item->{$label} = $value;
+            $min = $value if ( $value < $min );
+            $max = $value if ( $value > $max );
+        }
+        push @$graph_metrics, $metric_item;
+    }
+    return ($graph_metrics, $min, $max);
+}
+
+sub insert_latencies_metrics {
+    my $metrics = shift;
+
+    my ($graph_metrics, $min, $max) = ([], 0, 0);
+
+    my $metric_lookup = {
+        INSERT_AverageLatency_us          => 'Average',
+        INSERT_MaxLatency_us              => 'Max',
+        INSERT_MinLatency_us              => 'Min',
+        INSERT_95thPercentileLatency_us   => '95th perc.',
+        INSERT_99thPercentileLatency_us   => '99th perc.'
+    };
+
+    foreach my $metric ( qw(
+        INSERT_AverageLatency_us
+        INSERT_MinLatency_us
+        INSERT_95thPercentileLatency_us
+        INSERT_99thPercentileLatency_us
+    )) {
+        my $metric_item = { metric => $metric_lookup->{$metric} };
+        foreach my $id ( keys %$metrics ) {
+            my $label = _get_label( $id );
+            my $value = int($metrics->{$id}->{$metric}) || 0;
+            $metric_item->{$label} = $value;
+            $min = $value if ( $value < $min );
+            $max = $value if ( $value > $max );
+        }
+        push @$graph_metrics, $metric_item;
+    }
+    return ($graph_metrics, $min, $max);
+}
+
+sub update_latencies_metrics {
+    my $metrics = shift;
+
+    my ($graph_metrics, $min, $max) = ([], 0, 0);
+
+    my $metric_lookup = {
+        UPDATE_AverageLatency_us          => 'Average',
+        UPDATE_MaxLatency_us              => 'Max',
+        UPDATE_MinLatency_us              => 'Min',
+        UPDATE_95thPercentileLatency_us   => '95th perc.',
+        UPDATE_99thPercentileLatency_us   => '99th perc.'
+    };
+
+    foreach my $metric ( qw(
+        UPDATE_AverageLatency_us
+        UPDATE_MinLatency_us
+        UPDATE_95thPercentileLatency_us
+        UPDATE_99thPercentileLatency_us
+    )) {
+        my $metric_item = { metric => $metric_lookup->{$metric} };
+        foreach my $id ( keys %$metrics ) {
+            my $label = _get_label( $id );
+            my $value = int($metrics->{$id}->{$metric}) || 0;
+            $metric_item->{$label} = $value;
+            $min = $value if ( $value < $min );
+            $max = $value if ( $value > $max );
+        }
+        push @$graph_metrics, $metric_item;
+    }
+    return ($graph_metrics, $min, $max);
 }
 
 sub _get_label {
