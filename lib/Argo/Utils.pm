@@ -37,18 +37,17 @@ sub _metrics {
     my $metrics = {};
     my $steps = $argo_client->workflows_as_tree();
     my $pods = $argo_client->get_pods_of_workflow($steps, $id );
-    my @pod_array = @$pods;
-    foreach my $id ( @$pods ) {
-        if ( $id =~ /^ycsb/ ) {
+    my @pod_array = ();
+    foreach my $pod ( @$pods ) {
+        if ( $pod->{name} =~ /^ycsb/ ) {
+            push @pod_array, $pod->{name};
             my $y = YCSB::Metrics->new();
-            my $log = get_log( $id );
+            my $log = get_log( $pod->{id} );
             $y->load_metrics( $log );
             if ( scalar keys %{$y->{metrics}} ) {
-                $metrics->{$id} = $y->{metrics};
+                $metrics->{$pod->{name}} = $y->{metrics};
             } else {
-                # this to delete pods with no metrics...
-                my @indicesToKeep = grep { $pod_array[$_] ne $id } 0..$#pod_array;
-                @pod_array = @pod_array[@indicesToKeep];
+                $log->error("Error getting metrics for pod $pod->{name}");
             }
         }
     }
@@ -149,9 +148,9 @@ sub runtime_metrics {
 
     my ($graph_metrics, $min, $max) = ({}, 0, 0);
 
-    foreach my $id ( keys %$metrics ) {
-        my $label = _get_label( $id );
-        my $value = $metrics->{$id}->{OVERALL_RunTime_ms};
+    foreach my $label ( keys %$metrics ) {
+#         my $label = _get_label( $id );
+        my $value = $metrics->{$label}->{OVERALL_RunTime_ms};
         $graph_metrics->{$label} = $value;
         $min = $value if ( $value < $min );
         $max = $value if ( $value > $max );
@@ -164,9 +163,9 @@ sub throughput_metrics {
 
     my ($graph_metrics, $min, $max) = ({}, 0, 0);
 
-    foreach my $id ( keys %$metrics ) {
-        my $label = _get_label( $id );
-        my $value = int($metrics->{$id}->{OVERALL_Throughput_ops_sec});
+    foreach my $label ( keys %$metrics ) {
+#         my $label = _get_label( $id );
+        my $value = int($metrics->{$label}->{OVERALL_Throughput_ops_sec});
         $graph_metrics->{$label} = $value;
         $min = $value if ( $value < $min );
         $max = $value if ( $value > $max );
@@ -179,11 +178,11 @@ sub operations_metrics {
 
     my ($graph_metrics, $min, $max, $series) = ({}, 0, 0, []);
 
-    foreach my $id ( keys %$metrics ) {
+    foreach my $name ( keys %$metrics ) {
         foreach ( qw( READ UPDATE INSERT ) ) {
             my $label = ucfirst(lc($_));
-            if ( exists $metrics->{$id}->{$_.'_Operations'} ) {
-                $graph_metrics->{$label} += $metrics->{$id}->{$_.'_Operations'} - $metrics->{$id}->{$_.'_Return_OK'};
+            if ( exists $metrics->{$name}->{$_.'_Operations'} ) {
+                $graph_metrics->{$label} += $metrics->{$name}->{$_.'_Operations'} - $metrics->{$name}->{$_.'_Return_OK'};
                 $max = $graph_metrics->{$label} if ( $graph_metrics->{$label} > $max ); 
             }
         }
@@ -215,9 +214,9 @@ sub read_latencies_metrics {
         READ_99thPercentileLatency_us
     )) {
         my $metric_item = { metric => $metric_lookup->{$metric} };
-        foreach my $id ( keys %$metrics ) {
-            my $label = _get_label( $id );
-            my $value = int($metrics->{$id}->{$metric}) || 0;
+        foreach my $label ( keys %$metrics ) {
+#             my $label = _get_label( $id );
+            my $value = int($metrics->{$label}->{$metric}) || 0;
             $metric_item->{$label} = $value;
             $min = $value if ( $value < $min );
             $max = $value if ( $value > $max );
@@ -247,9 +246,9 @@ sub insert_latencies_metrics {
         INSERT_99thPercentileLatency_us
     )) {
         my $metric_item = { metric => $metric_lookup->{$metric} };
-        foreach my $id ( keys %$metrics ) {
-            my $label = _get_label( $id );
-            my $value = int($metrics->{$id}->{$metric}) || 0;
+        foreach my $label ( keys %$metrics ) {
+#             my $label = _get_label( $id );
+            my $value = int($metrics->{$label}->{$metric}) || 0;
             $metric_item->{$label} = $value;
             $min = $value if ( $value < $min );
             $max = $value if ( $value > $max );
@@ -279,9 +278,9 @@ sub update_latencies_metrics {
         UPDATE_99thPercentileLatency_us
     )) {
         my $metric_item = { metric => $metric_lookup->{$metric} };
-        foreach my $id ( keys %$metrics ) {
-            my $label = _get_label( $id );
-            my $value = int($metrics->{$id}->{$metric}) || 0;
+        foreach my $label ( keys %$metrics ) {
+#             my $label = _get_label( $id );
+            my $value = int($metrics->{$label}->{$metric}) || 0;
             $metric_item->{$label} = $value;
             $min = $value if ( $value < $min );
             $max = $value if ( $value > $max );
@@ -291,21 +290,19 @@ sub update_latencies_metrics {
     return ($graph_metrics, $min, $max);
 }
 
-sub _get_label {
-    my $id = shift;
-    if ( $id =~ /(\w|-)*-(\d+)/) {
-        return $2;
-    }
-    return $id;
-}
+# sub _get_label {
+#     my $id = shift;
+#     if ( $id =~ /(\w|-)*-(\d+)/) {
+#         return $2;
+#     }
+#     return $id;
+# }
 
 sub get_series {
     my @series = ();
 
-    foreach my $pod ( @_ ) {
-        if ( $pod =~ /(\w|-)*-(\d+)/) {
-            push @series, { dataField => "$2", displayText => "$2" };
-        }
+    foreach ( @_ ) {
+        push @series, { dataField => $_, displayText => $_ };
     }
     return \@series;
 }

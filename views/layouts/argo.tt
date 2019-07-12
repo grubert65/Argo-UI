@@ -91,7 +91,7 @@
                     height: 400,
                     items: [{
                         type: 'documentGroup',
-                        width: '100%',
+                        width: '90%',
                         items: [{
                             type: 'documentPanel',
                             title: 'Runtime',
@@ -247,7 +247,7 @@
                     tickMarks: {visible: true}
                 },
                 valueAxis: data['valueAxis'],
-                colorScheme: 'scheme01',
+                colorScheme: 'scheme08',
                 seriesGroups:
                     [
                         {
@@ -285,7 +285,7 @@
                     tickMarks: {visible: true}
                 },
                 valueAxis: data['valueAxis'],
-                colorScheme: 'scheme01',
+                colorScheme: 'scheme08',
                 seriesGroups:
                     [
                         {
@@ -325,7 +325,7 @@
                     tickMarks: {visible: true}
                 },
                 valueAxis: data['valueAxis'],
-                colorScheme: 'scheme01',
+                colorScheme: 'scheme08',
                 seriesGroups:
                     [
                         {
@@ -361,7 +361,7 @@
                     tickMarks: {visible: true}
                 },
                 valueAxis: data['valueAxis'],
-                colorScheme: 'scheme01',
+                colorScheme: 'scheme08',
                 seriesGroups:
                     [
                         {
@@ -397,7 +397,7 @@
                     tickMarks: {visible: true}
                 },
                 valueAxis: data['valueAxis'],
-                colorScheme: 'scheme01',
+                colorScheme: 'scheme08',
                 seriesGroups:
                     [
                         {
@@ -433,7 +433,7 @@
                     tickMarks: {visible: true}
                 },
                 valueAxis: data['valueAxis'],
-                colorScheme: 'scheme01',
+                colorScheme: 'scheme08',
                 seriesGroups:
                     [
                         {

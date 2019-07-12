@@ -10,7 +10,7 @@
           <div id="paramsGrid"></div>
         </div>
         <div data-container="runtimeGraph">
-          <div id="runtimeGraphID" style="width:'100%'; height: 400px"></div>
+          <div id="runtimeGraphID" style="width:'90%'; height: 400px"></div>
         </div>
         <div data-container="throughputGraph">
           <div id="throughputGraphID" style="width:'100%'; height: 400px"></div>
