@@ -260,9 +260,6 @@
             };
             $('#runtimeGraphID').jqxChart(runtime_data);
         })
-        .fail( function() {
-            alert("Something went wrong here...");
-        });
     }
 
     function draw_throughput_graph( id ) {
@@ -299,9 +296,6 @@
             
             $('#throughputGraphID').jqxChart(throughput_data);
         })
-        .fail(function() {
-            alert("something went wrong here...");
-        });
     }
 
     function draw_operations_graph( id ) {
