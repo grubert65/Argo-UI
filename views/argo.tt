@@ -4,7 +4,6 @@
         </div>
         <div data-container="OutputPanel">
           <textarea id="log" style="width:100%"></textarea>
-          OK
         </div>
         <div data-container="ParamsPanel">
           <div id="paramsGrid"></div>
